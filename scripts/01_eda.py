@@ -1,7 +1,7 @@
 """Paso 1 — Exploración de datos (EDA) tabular y DICOM.
 
 Uso (en un Kaggle Notebook, con la competencia añadida como Input):
-    python scripts/01_eda.py --data_dir /kaggle/input/rsna-knee-abnormality-detection
+    python scripts/01_eda.py --data_dir /kaggle/input/competitions/rsna-knee-abnormality-detection
 
 Imprime y guarda SOLO estadísticas agregadas. Nunca imprime texto de reportes
 (reglas de seguridad de datos de la competencia).
@@ -21,7 +21,7 @@ from knee.labels import LABELS  # noqa: E402
 
 def parse_args():
     p = argparse.ArgumentParser(description="EDA del dataset RSNA Knee")
-    p.add_argument("--data_dir", default="/kaggle/input/rsna-knee-abnormality-detection")
+    p.add_argument("--data_dir", default="/kaggle/input/competitions/rsna-knee-abnormality-detection")
     p.add_argument("--out_dir", default="outputs/eda")
     p.add_argument("--n_series_sample", type=int, default=300)
     return p.parse_args()
