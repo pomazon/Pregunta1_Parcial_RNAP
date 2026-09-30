@@ -28,3 +28,17 @@ scripts/          un script por paso del pipeline (01_eda.py, 02_..., ...)
 src/knee/         código reutilizable (etiquetas, datasets, modelos, métricas)
 outputs/          resultados generados (no se versionan)
 ```
+
+## Pipeline
+
+| Paso | Script | Qué hace |
+|---|---|---|
+| 1 | `scripts/01_eda.py` | Exploración de datos (solo estadísticas agregadas) |
+| 2 | `scripts/02_translate_reports.py` | Traduce los reportes no ingleses al inglés con NLLB-200 (GPU, local en Kaggle) |
+| 3 | `scripts/03_extract_labels.py` | Extrae las 12 etiquetas débiles con reglas y negación (`src/knee/extractor.py`) |
+| 4 | `scripts/04_validate_labels.py` | Mide el acuerdo del extractor contra los 58 estudios gold |
+
+Los reportes nunca salen de Kaggle ni se envían a APIs externas: la traducción usa un
+modelo abierto que corre en el propio notebook. `outputs/` no se versiona.
+
+Pruebas del extractor: `python tests/test_extractor.py`

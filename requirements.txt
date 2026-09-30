@@ -14,3 +14,5 @@ pylibjpeg-openjpeg
 python-gdcm
 opencv-python-headless
 langdetect
+transformers>=4.40
+sentencepiece
