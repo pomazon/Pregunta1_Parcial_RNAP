@@ -2,7 +2,7 @@
 # Comando único del proyecto: bash run_all.sh [DATA_DIR]
 # Cada paso se añade aquí a medida que se implementa.
 set -euo pipefail
-DATA_DIR="${1:-/kaggle/input/rsna-knee-abnormality-detection}"
+DATA_DIR="${1:-/kaggle/input/competitions/rsna-knee-abnormality-detection}"
 cd "$(dirname "$0")"
 
 pip install -q -r requirements.txt
