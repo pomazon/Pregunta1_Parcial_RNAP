@@ -1,0 +1,16 @@
+torch>=2.1
+torchvision>=0.16
+timm>=0.9
+numpy
+pandas
+scikit-learn
+matplotlib
+tqdm
+pyyaml
+pydicom>=2.4
+pylibjpeg
+pylibjpeg-libjpeg
+pylibjpeg-openjpeg
+python-gdcm
+opencv-python-headless
+langdetect
