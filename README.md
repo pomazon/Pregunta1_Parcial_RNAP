@@ -14,7 +14,7 @@ En un Kaggle Notebook con la competencia añadida como Input
 
 ```bash
 !git clone https://github.com/<usuario>/Pregunta1_Parcial_RNAP.git
-!cd Pregunta1_Parcial_RNAP && bash run_all.sh /kaggle/input/rsna-knee-abnormality-detection
+!cd Pregunta1_Parcial_RNAP && bash run_all.sh /kaggle/input/competitions/rsna-knee-abnormality-detection
 ```
 
 Los resultados quedan en `Pregunta1_Parcial_RNAP/outputs/`.
