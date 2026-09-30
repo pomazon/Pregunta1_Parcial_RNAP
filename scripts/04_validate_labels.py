@@ -85,22 +85,30 @@ def main():
         cell.append(pd.DataFrame({"lang": df.lang, "ok": df[f"{lab}_gold"].astype(int).values ==
                                   (df[f"{lab}__status"] == "pos").astype(int).values,
                                   "gold_pos": df[f"{lab}_gold"].astype(int).values,
-                                  "pred_pos": (df[f"{lab}__status"] == "pos").astype(int).values}))
+                                  "pred_pos": (df[f"{lab}__status"] == "pos").astype(int).values,
+                                  "etiqueta": lab}))
     cell = pd.concat(cell)
     cell["grupo"] = np.where(cell.lang == "en", "inglés original", "traducido")
 
-    def summarize(g):
+    def summarize(g, n_labels=len(LABELS)):
         tp = int(((g.gold_pos == 1) & (g.pred_pos == 1)).sum())
-        return pd.Series({"estudios": len(g) // len(LABELS), "acuerdo": round(g.ok.mean(), 3),
+        return pd.Series({"estudios": len(g) // n_labels, "acuerdo": round(g.ok.mean(), 3),
                           "recall": round(tp / max(int(g.gold_pos.sum()), 1), 3),
                           "precision": round(tp / max(int(g.pred_pos.sum()), 1), 3)})
 
-    by_group = cell.groupby("grupo").apply(summarize)
-    by_lang = cell.groupby("lang").apply(summarize).sort_values("estudios", ascending=False)
+    by_group = pd.DataFrame({k: summarize(g) for k, g in cell.groupby("grupo")}).T
+    by_lang = pd.DataFrame({k: summarize(g) for k, g in cell.groupby("lang")}).T
+    by_lang = by_lang.sort_values("estudios", ascending=False)
+    by_label_group = pd.DataFrame({k: summarize(g, 1) for k, g in cell.groupby(["etiqueta", "grupo"])}).T
+    recall_tbl = by_label_group["recall"].unstack()
+    recall_tbl["pos_gold_en"] = cell[cell.grupo == "inglés original"].groupby("etiqueta").gold_pos.sum()
+    recall_tbl["pos_gold_trad"] = cell[cell.grupo == "traducido"].groupby("etiqueta").gold_pos.sum()
     print("\n=== Acuerdo: inglés original vs. traducido ===")
     print(by_group.to_string())
     print("\n=== Acuerdo por idioma (ojo: pocos estudios gold en varios idiomas) ===")
     print(by_lang.to_string())
+    print("\n=== Recall por etiqueta: inglés original vs. traducido ===")
+    print(recall_tbl.to_string())
 
     dis = pd.DataFrame(disagreements)
     if len(dis):
@@ -113,6 +121,7 @@ def main():
     os.makedirs(args.out_dir, exist_ok=True)
     res.to_csv(os.path.join(args.out_dir, "validation_per_label.csv"))
     by_lang.to_csv(os.path.join(args.out_dir, "validation_per_language.csv"))
+    recall_tbl.to_csv(os.path.join(args.out_dir, "validation_recall_label_x_group.csv"))
     dis.to_csv(os.path.join(args.out_dir, "gold_disagreements.csv"), index=False)
     with open(os.path.join(args.out_dir, "validation_summary.json"), "w") as f:
         json.dump({"macro": macro.round(4).to_dict(), "noise_rate": round(1 - macro["acuerdo"], 4),
