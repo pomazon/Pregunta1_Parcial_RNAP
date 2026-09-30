@@ -27,6 +27,24 @@ def parse_args():
     return p.parse_args()
 
 
+def resolve_data_dir(path):
+    """Devuelve la carpeta que contiene train.csv y train_series.csv.
+
+    Si `path` no existe o no los contiene, los busca bajo /kaggle/input
+    (Kaggle puede montar la competencia en rutas distintas).
+    """
+    if os.path.isfile(os.path.join(path, "train_series.csv")):
+        return path
+    for root, dirs, files in os.walk("/kaggle/input"):
+        if "train_series.csv" in files and "train.csv" in files:
+            print(f"AVISO: datos no encontrados en {path}; se usan los de {root}")
+            return root
+        dirs[:] = [d for d in dirs if d not in ("train_series", "test_series")]
+    raise FileNotFoundError(
+        f"No se encontró train_series.csv en {path} ni bajo /kaggle/input. "
+        "¿Está añadida la competencia como Input?")
+
+
 def safe_lang(text):
     from langdetect import detect
     try:
@@ -37,6 +55,8 @@ def safe_lang(text):
 
 def main():
     args = parse_args()
+    args.data_dir = resolve_data_dir(args.data_dir)
+    print("Carpeta de datos:", args.data_dir)
     os.makedirs(args.out_dir, exist_ok=True)
     from langdetect import DetectorFactory
     DetectorFactory.seed = 0
