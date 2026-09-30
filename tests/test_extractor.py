@@ -37,6 +37,23 @@ CASES = [
     ("Absent ACL fibres, empty notch sign.", {"ACL": "pos"}),
     ("Lateral meniscus: bucket-handle tear. Medial meniscus: normal.", {"Lateral Meniscus": "pos", "Medial Meniscus": "neg"}),
     ("No fracture, but bone contusion of the medial femoral condyle.", {"Fracture": "neg", "Contusion": "pos"}),
+    # ---- v2 (vocabulario de traducciones, estudios no gold)
+    ("No focal cartilage defects in the medial compartment.", {"Medial OA": "neg"}),
+    ("Mild thinning of the patellofemoral articular cartilage.", {"PF OA": "pos"}),
+    ("Grade II chondromalacia of the lateral femoral condyle.", {"Lateral OA": "pos"}),
+    ("Increased amount of liquid in the joint.", {"Effusion": "pos"}),
+    ("Small amount of fluid in the suprapatellar recess.", {"Effusion": "unc"}),
+    ("No liquid in the joint cavity.", {"Effusion": "neg"}),
+    ("Rupture of the anterior crossed ligament.", {"ACL": "pos"}),
+    ("The crossed ligaments are of adequate strain.", {"ACL": "neg"}),
+    ("The meniscus medial shows a rupture of the posterior horn.", {"Medial Meniscus": "pos", "Lateral Meniscus": "nm"}),
+    ("Edema of Hoffa's fat pad.", {"Synovitis": "unc"}),
+    ("No edema in superolateral Hoffa's fat pad.", {"Synovitis": "nm"}),
+    ("Significant signal changes of the bone in the medial condyle.", {"Contusion": "unc"}),
+    ("Old healed fracture of the fibula.", {"Fracture": "unc"}),
+    ("Cyst in the popliteal fossa between semimembranosus and gastrocnemius.", {"Baker's": "pos"}),
+    ("Medial meniscus:\nTear of the posterior horn.\n\nNo effusion.", {"Medial Meniscus": "pos", "Effusion": "neg"}),
+    ("Lateral meniscus:\nIntact.", {"Lateral Meniscus": "neg"}),
 ]
 
 fails = 0

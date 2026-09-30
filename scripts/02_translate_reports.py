@@ -2,6 +2,8 @@
 
 Los reportes que no están en inglés se traducen dentro de Kaggle con
 facebook/nllb-200-distilled-600M, sin enviar texto a ninguna API externa.
+Antes de traducir se aplica un glosario clínico (src/knee/glossary.py) que fija
+en inglés los términos clave que NLLB suele deformar (desactivar con --no_glossary).
 Luego un único extractor de reglas en inglés (paso 3) obtiene las 12 etiquetas.
 
 Uso (Kaggle, GPU T4, Internet activado):
@@ -21,6 +23,7 @@ import pandas as pd
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from knee.common import DEFAULT_DATA_DIR, detect_language, resolve_data_dir  # noqa: E402
+from knee.glossary import apply_glossary  # noqa: E402
 
 MODEL_NAME = "facebook/nllb-200-distilled-600M"
 
@@ -46,6 +49,7 @@ def parse_args():
     p.add_argument("--limit", type=int, default=0, help="Traducir solo N reportes (prueba rápida)")
     p.add_argument("--force", action="store_true")
     p.add_argument("--allow_cpu", action="store_true")
+    p.add_argument("--no_glossary", action="store_true", help="Traducir sin el glosario clínico (v1)")
     return p.parse_args()
 
 
@@ -91,6 +95,14 @@ def main():
     train["Report"] = train["Report"].fillna("").astype(str)
     train["lang"] = train["Report"].apply(detect_language)
     print("Idiomas:", train["lang"].value_counts().to_dict())
+    if not args.no_glossary:
+        is_src = train["lang"].isin(list(LANG2NLLB))
+        before = train.loc[is_src, "Report"].copy()
+        train.loc[is_src, "Report"] = [apply_glossary(t, l) for t, l in
+                                       zip(train.loc[is_src, "Report"], train.loc[is_src, "lang"])]
+        changed = (before != train.loc[is_src, "Report"]).groupby(train.loc[is_src, "lang"]).mean()
+        print("Glosario aplicado. Proporción de reportes modificados por idioma:",
+              changed.round(2).to_dict())
 
     # Segmentos únicos por idioma (los reportes con plantilla repiten frases)
     to_do = {}
@@ -148,8 +160,9 @@ def main():
                          for segs in layouts[row.StudyInstanceUID])
 
     train["translated"] = train["lang"].isin(list(LANG2NLLB))
+    train["glossary"] = train["translated"] & (not args.no_glossary)
     train["report_en"] = train.apply(rebuild, axis=1)
-    train[["StudyInstanceUID", "lang", "translated", "report_en"]].to_csv(out_csv, index=False)
+    train[["StudyInstanceUID", "lang", "translated", "glossary", "report_en"]].to_csv(out_csv, index=False)
     untranslated = train.loc[~train.translated & (train.lang != "en"), "lang"].value_counts().to_dict()
     print(f"\nTraducidos: {int(train.translated.sum())} | en inglés: {int((train.lang == 'en').sum())} "
           f"| otros sin traducir: {untranslated}")

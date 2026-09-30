@@ -34,11 +34,17 @@ outputs/          resultados generados (no se versionan)
 | Paso | Script | Qué hace |
 |---|---|---|
 | 1 | `scripts/01_eda.py` | Exploración de datos (solo estadísticas agregadas) |
-| 2 | `scripts/02_translate_reports.py` | Traduce los reportes no ingleses al inglés con NLLB-200 (GPU, local en Kaggle) |
+| 2 | `scripts/02_translate_reports.py` | Aplica un glosario clínico por idioma (`src/knee/glossary.py`) y traduce al inglés con NLLB-200 (GPU, local en Kaggle) |
 | 3 | `scripts/03_extract_labels.py` | Extrae las 12 etiquetas débiles con reglas y negación (`src/knee/extractor.py`) |
 | 4 | `scripts/04_validate_labels.py` | Mide el acuerdo del extractor contra los 58 estudios gold |
 
 Los reportes nunca salen de Kaggle ni se envían a APIs externas: la traducción usa un
 modelo abierto que corre en el propio notebook. `outputs/` no se versiona.
 
-Pruebas del extractor: `python tests/test_extractor.py`
+Pruebas: `python tests/test_extractor.py` y `python tests/test_glossary.py`
+
+### Versiones del extractor
+
+- **v1**: reglas en inglés + traducción NLLB sin glosario (etiqueta git `extractor-v1`).
+- **v2**: glosario clínico antes de traducir + reglas ampliadas. Los cambios se derivaron
+  solo de `tools/vocab_mining.py` sobre estudios no gold, sin usar etiquetas.
