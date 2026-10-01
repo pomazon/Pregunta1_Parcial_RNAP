@@ -37,6 +37,8 @@ outputs/          resultados generados (no se versionan)
 | 2 | `scripts/02_translate_reports.py` | Aplica un glosario clínico por idioma (`src/knee/glossary.py`) y traduce al inglés con NLLB-200 (GPU, local en Kaggle) |
 | 3 | `scripts/03_extract_labels.py` | Extrae las 12 etiquetas débiles con reglas y negación (`src/knee/extractor.py`) |
 | 4 | `scripts/04_validate_labels.py` | Mide el acuerdo del extractor contra los 58 estudios gold |
+| 5 | `scripts/05_build_subset.py` | Elige 600 estudios no gold estratificados por etiqueta; validación interna agrupada por escáner; gold = test |
+| 6 | `scripts/06_preprocess.py` | DICOM -> caché `.npy` uint8 (16 cortes ordenados, 256×256, planos sagital y coronal) |
 
 Los reportes nunca salen de Kaggle ni se envían a APIs externas: la traducción usa un
 modelo abierto que corre en el propio notebook. `outputs/` no se versiona.

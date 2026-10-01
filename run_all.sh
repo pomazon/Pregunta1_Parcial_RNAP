@@ -19,9 +19,13 @@ python scripts/03_extract_labels.py
 echo "== Paso 4: validación del extractor contra gold =="
 python scripts/04_validate_labels.py --data_dir "$DATA_DIR"
 
+echo "== Paso 5: subconjunto y particiones =="
+python scripts/05_build_subset.py --data_dir "$DATA_DIR"
+
+echo "== Paso 6: preprocesamiento DICOM -> caché =="
+python scripts/06_preprocess.py --data_dir "$DATA_DIR"
+
 # Próximos pasos (se irán descomentando):
-# python scripts/05_build_subset.py     --data_dir "$DATA_DIR"
-# python scripts/06_preprocess.py       --data_dir "$DATA_DIR"
 # python scripts/07_train.py            --model scratch
 # python scripts/07_train.py            --model resnet50
 # python scripts/08_evaluate.py
