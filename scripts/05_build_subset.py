@@ -4,7 +4,8 @@ Uso:
     python scripts/05_build_subset.py
 
 * test  : los estudios gold (58) que tienen serie sagital. Solo para evaluación final.
-* train / val : N estudios NO gold con serie sagital fluid-sensitive, elegidos para que
+* train / val : N estudios NO gold con alguna serie sagital (se prefiere fluid-sensitive;
+  ver --fluid_only), elegidos para que
   cada etiqueta tenga al menos --min_pos positivos débiles; el resto se completa al azar.
   La validación interna se separa POR HUELLA DE ESCÁNER (fabricante + modelo + software +
   frecuencia + bobina), para no medir "reconocer el escáner" en lugar de la rodilla.
@@ -36,6 +37,8 @@ def parse_args():
     p.add_argument("--min_pos", type=int, default=40, help="Positivos débiles mínimos por etiqueta")
     p.add_argument("--val_frac", type=float, default=0.2)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--fluid_only", action="store_true",
+                   help="Excluir estudios sin sagital fluid-sensitive (sesga contra centros con PD sin supresión grasa)")
     p.add_argument("--out_dir", default="outputs/subset")
     return p.parse_args()
 
@@ -81,10 +84,17 @@ def main():
     series = pd.read_csv(os.path.join(data_dir, "train_series.csv"))
 
     gold_ids = set(train.loc[train[LABELS].notna().all(axis=1), "StudyInstanceUID"])
-    sag_fs = series[(series.Anatomical_Plane == "Sagittal") & (series.Fluid_Sensitive == 1)]
-    has_sag = set(sag_fs.StudyInstanceUID)
+    sag = series[series.Anatomical_Plane == "Sagittal"]
+    if args.fluid_only:
+        sag = sag[sag.Fluid_Sensitive == 1]
+    has_sag = set(sag.StudyInstanceUID)
     pool = weak[~weak.StudyInstanceUID.isin(gold_ids) & weak.StudyInstanceUID.isin(has_sag)].copy()
-    print(f"Pool NO gold con sagital fluid-sensitive: {len(pool)} estudios")
+    has_fs = set(series[(series.Anatomical_Plane == "Sagittal") & (series.Fluid_Sensitive == 1)].StudyInstanceUID)
+    pool["_fs"] = pool.StudyInstanceUID.isin(has_fs)
+    print(f"Pool NO gold con serie sagital: {len(pool)} estudios "
+          f"({int(pool._fs.sum())} con sagital fluid-sensitive)")
+    print("Proporción del pool SIN sagital fluid-sensitive por idioma:",
+          (1 - pool.groupby("lang")._fs.mean()).round(2).to_dict())
 
     # --- selección estratificada: etiquetas de más rara a más común
     is_pos = {lab: pool[f"{lab}__status"].eq("pos").values for lab in LABELS}
@@ -156,6 +166,8 @@ def main():
     print("Con coronal fluid-sensitive:", df.groupby("split").cor_series.apply(lambda s: int(s.notna().sum())).to_dict())
     print("Sagital no fluid-sensitive (respaldo):", df.groupby("split").sag_fluid.apply(lambda s: int((~s).sum())).to_dict())
     print("Idiomas train/val:", df[df.split != "test"].lang.value_counts().to_dict())
+    print("Sagital fluid-sensitive por idioma (train/val):")
+    print(pd.crosstab(df[df.split != "test"].lang, df[df.split != "test"].sag_fluid).to_string())
     prev = pd.DataFrame({
         "pool_pos_%": [round(100 * pool[f"{l}__status"].eq("pos").mean(), 1) for l in LABELS],
         "train_pos": [int(df[df.split == "train"][l].sum()) for l in LABELS],

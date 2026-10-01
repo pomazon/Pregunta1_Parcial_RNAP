@@ -11,7 +11,10 @@ Por cada estudio del subconjunto y cada plano:
      cubren LCA (centro) y ambos meniscos (extremos) y se evitan los cortes vacíos del borde.
   3. Decodifica solo esos cortes, aplica RescaleSlope/Intercept, normaliza la serie
      recortando percentiles 1–99 y escala a uint8.
-  4. Rellena a cuadrado (sin deformar la anatomía) y redimensiona a --size x --size.
+  4. Normaliza la escala física: recorta o rellena (centrado) a un campo de visión de
+     --fov_mm milímetros usando PixelSpacing, y redimensiona a --size x --size. Así una
+     rodilla ocupa lo mismo en la imagen aunque la resolución original varíe (480–800 px,
+     0.16–0.66 mm/px). Con --fov_mm 0 solo rellena a cuadrado.
 
 Salida (outputs/cache/):
   <plane>.npy        uint8 [N, n_slices, size, size]
@@ -42,6 +45,7 @@ def parse_args():
     p.add_argument("--planes", default="Sagittal,Coronal")
     p.add_argument("--n_slices", type=int, default=16)
     p.add_argument("--size", type=int, default=256)
+    p.add_argument("--fov_mm", type=float, default=180.0)
     p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2)))
     p.add_argument("--out_dir", default="outputs/cache")
     p.add_argument("--limit", type=int, default=0, help="Procesar solo N estudios (prueba)")
@@ -58,7 +62,18 @@ def _sort_key_fn(headers):
         return [int(getattr(h, "InstanceNumber", i)) for i, h in enumerate(headers)], "instance"
 
 
-def load_series(series_dir, n_slices, size):
+def crop_or_pad(vol, th, tw):
+    """vol [n, h, w] -> [n, th, tw], centrado."""
+    n, h, w = vol.shape
+    out = np.zeros((n, th, tw), vol.dtype)
+    sy, sx = max(0, (h - th) // 2), max(0, (w - tw) // 2)      # origen en vol
+    dy, dx = max(0, (th - h) // 2), max(0, (tw - w) // 2)      # origen en out
+    ch, cw = min(h, th), min(w, tw)
+    out[:, dy:dy + ch, dx:dx + cw] = vol[:, sy:sy + ch, sx:sx + cw]
+    return out
+
+
+def load_series(series_dir, n_slices, size, fov_mm=0.0):
     """Devuelve (volumen uint8 [n_slices, size, size], metadatos)."""
     files = sorted(f for f in os.listdir(series_dir) if f.endswith(".dcm"))
     headers = [pydicom.dcmread(os.path.join(series_dir, f), stop_before_pixels=True) for f in files]
@@ -83,22 +98,26 @@ def load_series(series_dir, n_slices, size):
     vol = np.clip((vol - lo) / max(hi - lo, 1e-6), 0, 1)
 
     h, w = vol.shape[1:]
-    m = max(h, w)
-    pad = ((0, 0), ((m - h) // 2, m - h - (m - h) // 2), ((m - w) // 2, m - w - (m - w) // 2))
-    vol = np.pad(vol, pad)
+    sp = getattr(headers[0], "PixelSpacing", None)
+    if fov_mm > 0 and sp is not None and float(sp[0]) > 0 and float(sp[1]) > 0:
+        th, tw = int(round(fov_mm / float(sp[0]))), int(round(fov_mm / float(sp[1])))
+        vol = crop_or_pad(vol, th, tw)
+    else:
+        m = max(h, w)
+        vol = crop_or_pad(vol, m, m)
     out = np.stack([cv2.resize(s, (size, size), interpolation=cv2.INTER_AREA) for s in vol])
     out = (out * 255).round().astype(np.uint8)
-    sp = getattr(headers[0], "PixelSpacing", [np.nan, np.nan])
     meta = {"n_orig": n, "rows": h, "cols": w, "sort": method,
             "pixel_spacing": float(sp[0]) if sp is not None else np.nan,
+            "fov_orig_mm": float(sp[0]) * h if sp is not None else np.nan,
             "slice_thickness": float(getattr(headers[0], "SliceThickness", np.nan) or np.nan)}
     return out, meta
 
 
 def _job(args):
-    series_dir, n_slices, size = args
+    series_dir, n_slices, size, fov_mm = args
     try:
-        vol, meta = load_series(series_dir, n_slices, size)
+        vol, meta = load_series(series_dir, n_slices, size, fov_mm)
         return vol, meta, ""
     except Exception as e:  # se registra y se sigue con el resto
         return None, {}, f"{type(e).__name__}: {str(e)[:120]}"
@@ -139,7 +158,7 @@ def main():
         npy_path = os.path.join(args.out_dir, f"{plane}.npy")
         arr = np.lib.format.open_memmap(npy_path, mode="w+", dtype=np.uint8,
                                         shape=(len(rows), args.n_slices, args.size, args.size))
-        jobs = [(os.path.join(data_dir, "train_series", u, s), args.n_slices, args.size)
+        jobs = [(os.path.join(data_dir, "train_series", u, s), args.n_slices, args.size, args.fov_mm)
                 for u, s in zip(rows.StudyInstanceUID, rows[s_col])]
         metas, errors, t0 = [], [], time.time()
         with ProcessPoolExecutor(max_workers=args.workers) as ex:
@@ -169,6 +188,8 @@ def main():
               (ok.rows.astype(int).astype(str) + "x" + ok.cols.astype(int).astype(str)).value_counts().head(5).to_dict())
         print("Ordenación por:", ok["sort"].value_counts().to_dict())
         print("Espaciado de píxel (mm):", ok.pixel_spacing.describe().round(2).to_dict())
+        print("Campo de visión original (mm):", ok.fov_orig_mm.describe().round(0).to_dict(),
+              f"-> normalizado a {args.fov_mm:.0f} mm" if args.fov_mm > 0 else "")
 
 
 if __name__ == "__main__":
