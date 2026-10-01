@@ -25,8 +25,8 @@ python scripts/05_build_subset.py --data_dir "$DATA_DIR"
 echo "== Paso 6: preprocesamiento DICOM -> caché =="
 python scripts/06_preprocess.py --data_dir "$DATA_DIR"
 
-# Próximos pasos (se irán descomentando):
-# python scripts/07_train.py            --model scratch
-# python scripts/07_train.py            --model resnet50
-# python scripts/08_evaluate.py
+echo "== Pasos 7-8: entrenamiento, ablaciones y resumen (GPU) =="
+bash scripts/run_experiments.sh
+
+# Próximo paso:
 # python scripts/09_gradcam.py

@@ -140,9 +140,15 @@ def main():
     groups = tv.fingerprint.value_counts()
     print(f"Huellas de escáner distintas en train/val: {len(groups)} "
           f"(la mayor cubre {groups.iloc[0]} estudios)")
+    # Los escáneres cuya sagital no es fluid-sensitive (casi todo el centro alemán) van
+    # siempre a train: si cayeran en val, el modelo no vería nunca ese protocolo.
+    fs_ratio = tv.groupby("fingerprint").sag_fluid.mean()
+    train_only = set(fs_ratio[fs_ratio < 0.5].index)
+    print(f"Huellas forzadas a train por sagital no fluid-sensitive: {len(train_only)} "
+          f"({int(tv.fingerprint.isin(train_only).sum())} estudios)")
     target = args.val_frac * len(tv)
     val_groups, n_val = set(), 0
-    for g in rng.permutation(groups.index.values):
+    for g in rng.permutation([g for g in groups.index.values if g not in train_only]):
         if n_val >= target:
             break
         if n_val + groups[g] > 1.5 * target:

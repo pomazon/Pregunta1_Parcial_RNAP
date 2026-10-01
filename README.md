@@ -38,7 +38,18 @@ outputs/          resultados generados (no se versionan)
 | 3 | `scripts/03_extract_labels.py` | Extrae las 12 etiquetas débiles con reglas y negación (`src/knee/extractor.py`) |
 | 4 | `scripts/04_validate_labels.py` | Mide el acuerdo del extractor contra los 58 estudios gold |
 | 5 | `scripts/05_build_subset.py` | Elige 600 estudios no gold estratificados por etiqueta; validación interna agrupada por escáner; gold = test |
-| 6 | `scripts/06_preprocess.py` | DICOM -> caché `.npy` uint8 (16 cortes ordenados, 256×256, planos sagital y coronal) |
+| 6 | `scripts/06_preprocess.py` | DICOM -> caché `.npy` uint8 (16 cortes ordenados, campo de visión 180 mm, 256×256, sagital y coronal) |
+| 7 | `scripts/07_train.py` | Entrena un modelo 2.5D (CNN propia o backbone timm + atención por etiqueta) y lo evalúa en val y en los 58 gold |
+| 8 | `scripts/08_summarize.py` | Tabla comparativa de experimentos (`scripts/run_experiments.sh` lanza A–D) |
+
+### Experimentos
+
+| Id | Modelo | Pérdida | Etiquetas | Propósito |
+|---|---|---|---|---|
+| A | CNN desde cero | BCE | blandas | E2: modelo desde cero |
+| B | ResNet-50 (ImageNet) | BCE | blandas | E2: transfer learning (principal) |
+| C | ResNet-50 | focal | blandas | E4: ablación de pérdida |
+| D | ResNet-50 | BCE | duras (incierto = 0) | E4: ablación de manejo de ruido |
 
 Los reportes nunca salen de Kaggle ni se envían a APIs externas: la traducción usa un
 modelo abierto que corre en el propio notebook. `outputs/` no se versiona.
