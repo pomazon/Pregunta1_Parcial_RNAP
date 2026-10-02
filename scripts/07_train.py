@@ -194,7 +194,7 @@ def main():
     macro_test = float(np.nanmean(auc_test))
     pd.set_option("display.width", 200)
     print(f"\n=== {run} | mejor epoch {best_ep} | val macro AUC {np.nanmean(auc_val):.4f} ===")
-    print(f"TEST (58 gold) macro AUC: {macro_test:.4f}  [IC95 {mlo:.3f}–{mhi:.3f}]  | "
+    print(f"TEST ({len(y_test)} gold) macro AUC: {macro_test:.4f}  [IC95 {mlo:.3f}–{mhi:.3f}]  | "
           f"macro F1 (umbral de val): {prf_t[:, 2].mean():.3f}")
     print(table.to_string())
 

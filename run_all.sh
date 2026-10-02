@@ -28,5 +28,5 @@ python scripts/06_preprocess.py --data_dir "$DATA_DIR"
 echo "== Pasos 7-8: entrenamiento, ablaciones y resumen (GPU) =="
 bash scripts/run_experiments.sh
 
-# Próximo paso:
-# python scripts/09_gradcam.py
+echo "== Paso 9: Grad-CAM y atención (mejor modelo) =="
+python scripts/09_gradcam.py --run C_resnet50_focal_soft
