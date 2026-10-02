@@ -50,6 +50,9 @@ def parse_args():
     p.add_argument("--cache_dir", default="outputs/cache")
     p.add_argument("--labels", default="ACL,Lateral Meniscus,Medial Meniscus,Effusion,Fracture,Baker's")
     p.add_argument("--n_cases", type=int, default=2)
+    p.add_argument("--layer", default="last",
+                   help="Capa para Grad-CAM: 'last' (salida del codificador, 8x8) o un módulo interno, "
+                        "p. ej. 'layer3' en ResNet (16x16, más detalle espacial)")
     p.add_argument("--out_dir", default="outputs/gradcam")
     return p.parse_args()
 
@@ -65,18 +68,31 @@ def find_run_dir(run, runs_dir):
     return os.path.dirname(hits[0])
 
 
-def gradcam_study(model, x, label_idx):
-    """x [1, P, 3, H, W] -> cam [P, H, W] en [0,1], atención [P], probabilidad."""
+def gradcam_study(model, x, label_idx, layer=None):
+    """x [1, P, 3, H, W] -> cam [P, H, W] en [0,1], atención [P], probabilidad.
+
+    layer: módulo interno cuya activación se usa (None = salida del codificador).
+    """
     model.zero_grad(set_to_none=True)
     b, p = x.shape[:2]
     xn = (x.flatten(0, 1) - model.mean) / model.std
+    store = {}
+    hook = None
+    if layer is not None:
+        def _keep(_m, _i, out):
+            out.retain_grad()
+            store["act"] = out
+        hook = layer.register_forward_hook(_keep)
     fmap = model.encoder(xn)                                   # [P, C, h, w]
     fmap.retain_grad()
+    if hook is not None:
+        hook.remove()
     vec = F.adaptive_avg_pool2d(fmap, 1).flatten(1).view(b, p, -1)
     logits, att = model.aggregate(vec)
     logits[0, label_idx].backward()
-    w = fmap.grad.mean(dim=(2, 3), keepdim=True)               # [P, C, 1, 1]
-    cam = F.relu((w * fmap).sum(1, keepdim=True))              # [P, 1, h, w]
+    act = store.get("act", fmap)
+    w = act.grad.mean(dim=(2, 3), keepdim=True)                # [P, C, 1, 1]
+    cam = F.relu((w * act).sum(1, keepdim=True))               # [P, 1, h, w]
     cam = F.interpolate(cam, size=x.shape[-2:], mode="bilinear", align_corners=False)[:, 0]
     cam = cam / (cam.flatten(1).max(1).values.view(-1, 1, 1) + 1e-8)
     a = att[0, :, label_idx] if att is not None else torch.full((p,), 1.0 / p)
@@ -158,12 +174,20 @@ def main():
 
     # ---- Grad-CAM en verdaderos positivos de mayor confianza
     cases = []
-    for lab in [l.strip() for l in args.labels.split(",") if l.strip()]:
+    layer = None
+    if args.layer != "last":
+        mods = dict(model.encoder.features.named_modules())
+        if args.layer not in mods:
+            raise SystemExit(f"Capa '{args.layer}' no existe. Opciones: {[k for k in mods if k.count('.') == 0 and k]}")
+        layer = mods[args.layer]
+        print(f"Grad-CAM sobre la capa '{args.layer}'")
+    labels = LABELS if args.labels.strip().lower() == "all" else [l.strip() for l in args.labels.split(",") if l.strip()]
+    for lab in labels:
         j = LABELS.index(lab)
         pos = test[test[f"{lab}__gold"] == 1].sort_values(f"{lab}__p", ascending=False).head(args.n_cases)
         for k, (i, r) in enumerate(pos.iterrows()):
             x, _ = ds[i]
-            cam, att, prob = gradcam_study(model, x.unsqueeze(0).to(device), j)
+            cam, att, prob = gradcam_study(model, x.unsqueeze(0).to(device), j, layer)
             img = x[:, 1].numpy()                                     # canal central = corte propio
             path = os.path.join(args.out_dir, f"{lab.replace(' ', '_').replace(chr(39), '')}_{k + 1}.png")
             plot_case(img, cam, att, lab, r.StudyInstanceUID[-6:], prob, path)
