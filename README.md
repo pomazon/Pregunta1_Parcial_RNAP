@@ -1,4 +1,6 @@
-# Examen Parcial - Pregunta 1 — Clasificación multietiqueta de anomalías de rodilla en MRI
+# P1 — Clasificación multietiqueta de anomalías de rodilla en MRI
+
+Examen parcial · Redes Neuronales y Aprendizaje Profundo · UNI FIIS 2026-II
 
 Modelo 2.5D a nivel de estudio que predice 12 hallazgos en resonancias de rodilla, entrenado con
 etiquetas débiles extraídas de reportes radiológicos multilingües y evaluado en los 58 estudios con
@@ -47,23 +49,38 @@ En un **Kaggle Notebook** nuevo:
 
 Corre **todos** los pasos de extremo a extremo con pocos estudios (200 reportes traducidos incluyendo
 los 58 gold, 80 estudios para entrenar, 20 por partición en imágenes) y **1 epoch** por experimento.
-Tarda del orden de 15–25 min en una T4. Sirve para comprobar que el pipeline funciona; **sus métricas no
-son resultados**. Usar un notebook limpio, porque escribe en `outputs/`.
+Sirve para comprobar que el pipeline funciona sin esperar las horas de la corrida completa; **sus
+métricas no son resultados**. Usar un notebook limpio, porque escribe en `outputs/`.
+
+Verificada en Kaggle (GPU T4) el 24-oct-2026: los 10 pasos terminaron sin errores en 25 min.
 
 ### Corrida completa
 
-Reproduce los resultados del informe. En una GPU T4 de Kaggle toma varias horas (la traducción y los
-6 entrenamientos son lo más costoso; el preprocesamiento, unos 4 min). Como puede superar el
-límite de 12 h por sesión de Kaggle, nosotros la ejecutamos repartida en cuatro notebooks que encadenan
-sus salidas (cada script busca lo que le falta bajo `/kaggle/input`, ver `src/knee/common.py`):
+El mismo comando de arriba, sin `--quick`, reproduce los resultados del informe:
 
-| Notebook | Comandos | Hardware | Input |
-|---|---|---|---|
-| P1_Lanzador | pasos 1–4 (`01`–`04`) | GPU | Competencia |
-| P1_Preprocesado | pasos 5–6 (`05`, `06`) | CPU | Competencia + P1_Lanzador |
-| P1_Entrenamiento | experimentos A–D (`07`) | GPU T4 | P1_Preprocesado |
-| P1_Experimentos2 | experimentos E–F, `08`, `09` | GPU T4 | P1_Preprocesado + P1_Entrenamiento |
-| P1_Figuras | `10` | CPU | P1_Preprocesado + P1_Entrenamiento + P1_Experimentos2 (+ P1_Lanzador) |
+```bash
+!cd Pregunta1_Parcial_RNAP && bash run_all.sh
+```
+
+En una GPU T4 de Kaggle toma varias horas; lo más costoso son la traducción y los seis
+entrenamientos (el preprocesamiento tarda unos 4 min).
+
+<details>
+<summary>Si una sola sesión no alcanza (límite de 12 h de Kaggle)</summary>
+
+La corrida se puede partir en tramos, cada uno en un notebook nuevo que añade como Input la salida del
+anterior. Los scripts buscan bajo `/kaggle/input` lo que no encuentran en `outputs/`
+(ver `find_file` en `src/knee/common.py`), así que no hay que mover archivos a mano. En cada
+notebook, clonar el repositorio y ejecutar antes `pip install -q -r requirements.txt`.
+
+| Tramo | Comandos | Input |
+|---|---|---|
+| 1 | `01` a `06` (exploración, traducción, etiquetas, validación, subconjunto, caché) | Competencia |
+| 2 | `bash scripts/run_experiments.sh` (entrenamientos A–F y resumen) | Salida del tramo 1 |
+| 3 | `python scripts/09_gradcam.py --run C_resnet50_focal_soft` y `python scripts/10_figures.py` | Salidas de los tramos 1 y 2 |
+
+Así generamos nosotros los resultados del informe, repartidos en varios notebooks de Kaggle.
+</details>
 
 ## Ejecución fuera de Kaggle
 
