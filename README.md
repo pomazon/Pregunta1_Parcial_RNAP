@@ -1,6 +1,4 @@
-# P1 — Clasificación multietiqueta de anomalías de rodilla en MRI
-
-Examen parcial · Redes Neuronales y Aprendizaje Profundo · UNI FIIS 2026-II
+# Examen parcial Pregunta 1 — Clasificación multietiqueta de anomalías de rodilla en MRI
 
 Modelo 2.5D a nivel de estudio que predice 12 hallazgos en resonancias de rodilla, entrenado con
 etiquetas débiles extraídas de reportes radiológicos multilingües y evaluado en los 58 estudios con
