@@ -1,4 +1,6 @@
-# Examen parcial Pregunta 1 — Clasificación multietiqueta de anomalías de rodilla en MRI
+# P1 — Clasificación multietiqueta de anomalías de rodilla en MRI
+
+Examen parcial · Redes Neuronales y Aprendizaje Profundo · UNI FIIS 2026-II
 
 Modelo 2.5D a nivel de estudio que predice 12 hallazgos en resonancias de rodilla, entrenado con
 etiquetas débiles extraídas de reportes radiológicos multilingües y evaluado en los 58 estudios con
@@ -31,11 +33,13 @@ En un **Kaggle Notebook** nuevo:
 3. Ejecutar:
 
 ```bash
-!git clone https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
+!git clone --branch entrega-final https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
 !cd Pregunta1_Parcial_RNAP && bash run_all.sh
 ```
 
-`run_all.sh` instala `requirements.txt` y ejecuta los pasos 1 a 10 en orden. Los resultados quedan en
+`--branch entrega-final` descarga exactamente la versión entregada (release `entrega-final`); Git avisa
+"detached HEAD", lo cual es normal al clonar un release. `run_all.sh` instala `requirements.txt` y
+ejecuta los pasos 1 a 10 en orden. Los resultados quedan en
 `Pregunta1_Parcial_RNAP/outputs/`. Si la competencia está montada en otra ruta, pasarla como argumento:
 `bash run_all.sh /ruta/a/los/datos`.
 
@@ -95,7 +99,7 @@ pip install kaggle
 kaggle competitions download -c rsna-knee-abnormality-detection -p data
 cd data && unzip -q *.zip && rm *.zip && cd ..
 # La carpeta debe contener train.csv, train_series.csv y train_series/
-git clone https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
+git clone --branch entrega-final https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
 cd Pregunta1_Parcial_RNAP && bash run_all.sh --quick ../data   # prueba rápida
 #                         bash run_all.sh ../data           # corrida completa
 ```
