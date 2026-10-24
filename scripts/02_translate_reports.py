@@ -24,6 +24,7 @@ import pandas as pd
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from knee.common import DEFAULT_DATA_DIR, detect_language, resolve_data_dir  # noqa: E402
 from knee.glossary import apply_glossary  # noqa: E402
+from knee.labels import LABELS  # noqa: E402
 
 MODEL_NAME = "facebook/nllb-200-distilled-600M"
 
@@ -46,7 +47,8 @@ def parse_args():
     p.add_argument("--out_dir", default="outputs/labels")
     p.add_argument("--batch_size", type=int, default=32)
     p.add_argument("--num_beams", type=int, default=2)
-    p.add_argument("--limit", type=int, default=0, help="Traducir solo N reportes (prueba rápida)")
+    p.add_argument("--limit", type=int, default=0,
+                   help="Prueba rápida: traducir solo N reportes (siempre incluye los gold)")
     p.add_argument("--force", action="store_true")
     p.add_argument("--allow_cpu", action="store_true")
     p.add_argument("--no_glossary", action="store_true", help="Traducir sin el glosario clínico (v1)")
@@ -89,9 +91,14 @@ def main():
         sys.exit("No hay GPU. Activen Accelerator = GPU T4 en Kaggle (o usen --allow_cpu, muy lento).")
 
     data_dir = resolve_data_dir(args.data_dir)
-    train = pd.read_csv(os.path.join(data_dir, "train.csv"), usecols=["StudyInstanceUID", "Report"])
+    train = pd.read_csv(os.path.join(data_dir, "train.csv"), usecols=["StudyInstanceUID", "Report"] + LABELS)
     if args.limit:
-        train = train.head(args.limit)
+        # Prueba rápida: todos los gold (para poder validar en el paso 4) + otros hasta --limit
+        is_gold = train[LABELS].notna().all(axis=1)
+        n_rest = max(0, args.limit - int(is_gold.sum()))
+        train = pd.concat([train[is_gold], train[~is_gold].head(n_rest)])
+        print(f"--limit {args.limit}: {int(is_gold.sum())} gold + {n_rest} no gold")
+    train = train[["StudyInstanceUID", "Report"]].reset_index(drop=True)
     train["Report"] = train["Report"].fillna("").astype(str)
     train["lang"] = train["Report"].apply(detect_language)
     print("Idiomas:", train["lang"].value_counts().to_dict())

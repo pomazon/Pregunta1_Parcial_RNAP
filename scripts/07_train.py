@@ -138,7 +138,7 @@ def main():
                    "n_params": n_params, "n": {k: len(v) for k, v in parts.items()}}, f, indent=2)
 
     # ---------------- entrenamiento
-    best, best_ep, history, bad = -1.0, -1, [], 0
+    best, best_ep, history, bad = -2.0, -1, [], 0
     for ep in range(1, args.epochs + 1):
         model.train()
         t0, tot, n = time.time(), 0.0, 0
@@ -162,8 +162,9 @@ def main():
         history.append({"epoch": ep, "train_loss": tot / max(n, 1), "val_macro_auc": macro,
                         **{f"val_auc_{l}": a for l, a in zip(LABELS, aucs)}, "sec": time.time() - t0})
         flag = ""
-        if macro > best:
-            best, best_ep, bad, flag = macro, ep, 0, " *"
+        score = macro if np.isfinite(macro) else -1.0   # NaN si val no tiene positivos (prueba rápida)
+        if score > best:
+            best, best_ep, bad, flag = score, ep, 0, " *"
             torch.save(model.state_dict(), os.path.join(out, "best.pt"))
         else:
             bad += 1

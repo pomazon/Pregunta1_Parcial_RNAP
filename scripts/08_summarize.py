@@ -45,6 +45,8 @@ def paired_bootstrap(y, p1, p2, labels_idx=None, n_boot=2000, seed=0):
         if np.isfinite(a1).any() and np.isfinite(a2).any():
             deltas.append(np.nanmean(a1) - np.nanmean(a2))
     deltas = np.array(deltas)
+    if len(deltas) == 0:   # sin positivos suficientes (p. ej. prueba rápida)
+        return base, np.nan, np.nan, np.nan
     return base, np.percentile(deltas, 2.5), np.percentile(deltas, 97.5), float((deltas <= 0).mean())
 
 

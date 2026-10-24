@@ -17,3 +17,12 @@ LABELS = [
     "Contusion",         # contusión ósea
     "Fracture",          # fractura
 ]
+
+# Nombres en español para figuras y tablas del informe
+LABELS_ES = {
+    "ACL": "LCA", "MCL": "LCM", "Medial Meniscus": "Menisco medial",
+    "Lateral Meniscus": "Menisco lateral", "Medial OA": "Artrosis medial",
+    "Lateral OA": "Artrosis lateral", "PF OA": "Artrosis patelofemoral",
+    "Effusion": "Derrame", "Synovitis": "Sinovitis", "Baker's": "Quiste de Baker",
+    "Contusion": "Contusión ósea", "Fracture": "Fractura",
+}

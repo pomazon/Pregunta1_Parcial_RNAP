@@ -2,31 +2,70 @@
 
 Examen parcial · Redes Neuronales y Aprendizaje Profundo · UNI FIIS 2026-II
 
+Modelo 2.5D a nivel de estudio que predice 12 hallazgos en resonancias de rodilla, entrenado con
+etiquetas débiles extraídas de reportes radiológicos multilingües y evaluado en los 58 estudios con
+etiqueta dorada (gold).
+
 ## Datos
 
-RSNA Knee Abnormality Detection (Kaggle). Los datos **no** están en este
-repositorio (reglas de la competencia). Se usan montados en un Kaggle Notebook.
+RSNA Knee Abnormality Detection (Kaggle). Los datos **no** están en este repositorio (reglas de la
+competencia): se usan montados en un Kaggle Notebook. Ningún reporte, imagen ni etiqueta derivada se
+versiona (`outputs/` está en `.gitignore`) y los reportes no se envían a ninguna API externa: la
+traducción usa un modelo abierto (NLLB-200) que corre dentro del notebook.
 
 ## Ejecución (comando único)
 
-En un Kaggle Notebook con la competencia añadida como Input
-(**+ Add Input → RSNA Knee Abnormality Detection**), Internet activado y GPU T4:
+En un **Kaggle Notebook** nuevo:
+
+1. **+ Add Input** → competencia *RSNA Knee Abnormality Detection*.
+2. *Settings*: **Accelerator = GPU T4**, **Internet = On**.
+3. Ejecutar:
 
 ```bash
-!git clone https://github.com/<usuario>/Pregunta1_Parcial_RNAP.git
-!cd Pregunta1_Parcial_RNAP && bash run_all.sh /kaggle/input/competitions/rsna-knee-abnormality-detection
+!git clone https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
+!cd Pregunta1_Parcial_RNAP && bash run_all.sh
 ```
 
-Los resultados quedan en `Pregunta1_Parcial_RNAP/outputs/`.
+`run_all.sh` instala `requirements.txt` y ejecuta los pasos 1 a 10 en orden. Los resultados quedan en
+`Pregunta1_Parcial_RNAP/outputs/`. Si la competencia está montada en otra ruta, pasarla como argumento:
+`bash run_all.sh /ruta/a/los/datos`.
+
+### Prueba rápida (recomendada para verificar)
+
+```bash
+!cd Pregunta1_Parcial_RNAP && bash run_all.sh --quick
+```
+
+Corre **todos** los pasos de extremo a extremo con pocos estudios (200 reportes traducidos incluyendo
+los 58 gold, 80 estudios para entrenar, 20 por partición en imágenes) y **1 epoch** por experimento.
+Tarda del orden de 15–25 min en una T4. Sirve para comprobar que el pipeline funciona; **sus métricas no
+son resultados**. Usar un notebook limpio, porque escribe en `outputs/`.
+
+### Corrida completa
+
+Reproduce los resultados del informe. En una GPU T4 de Kaggle toma varias horas (la traducción y los
+6 entrenamientos son lo más costoso; el preprocesamiento, unos 4 min). Como puede superar el
+límite de 12 h por sesión de Kaggle, nosotros la ejecutamos repartida en cuatro notebooks que encadenan
+sus salidas (cada script busca lo que le falta bajo `/kaggle/input`, ver `src/knee/common.py`):
+
+| Notebook | Comandos | Hardware | Input |
+|---|---|---|---|
+| P1_Lanzador | pasos 1–4 (`01`–`04`) | GPU | Competencia |
+| P1_Preprocesado | pasos 5–6 (`05`, `06`) | CPU | Competencia + P1_Lanzador |
+| P1_Entrenamiento | experimentos A–D (`07`) | GPU T4 | P1_Preprocesado |
+| P1_Experimentos2 | experimentos E–F, `08`, `09` | GPU T4 | P1_Preprocesado + P1_Entrenamiento |
+| P1_Figuras | `10` | CPU | P1_Preprocesado + P1_Entrenamiento + P1_Experimentos2 (+ P1_Lanzador) |
 
 ## Estructura
 
 ```
-run_all.sh        comando único: ejecuta todos los pasos en orden
-requirements.txt  dependencias
-scripts/          un script por paso del pipeline (01_eda.py, 02_..., ...)
-src/knee/         código reutilizable (etiquetas, datasets, modelos, métricas)
-outputs/          resultados generados (no se versionan)
+run_all.sh          comando único (--quick para la prueba rápida)
+requirements.txt    dependencias
+scripts/            un script por paso del pipeline (01 … 10) y run_experiments.sh
+src/knee/           código propio: etiquetas, glosario, extractor, dataset, modelos, pérdidas, métricas
+tools/              vocab_mining.py (diagnóstico sin etiquetas) y plot_architecture.py (diagrama)
+tests/              pruebas del extractor y del glosario con frases sintéticas
+outputs/            resultados generados (no se versionan)
 ```
 
 ## Pipeline
@@ -34,33 +73,48 @@ outputs/          resultados generados (no se versionan)
 | Paso | Script | Qué hace |
 |---|---|---|
 | 1 | `scripts/01_eda.py` | Exploración de datos (solo estadísticas agregadas) |
-| 2 | `scripts/02_translate_reports.py` | Aplica un glosario clínico por idioma (`src/knee/glossary.py`) y traduce al inglés con NLLB-200 (GPU, local en Kaggle) |
-| 3 | `scripts/03_extract_labels.py` | Extrae las 12 etiquetas débiles con reglas y negación (`src/knee/extractor.py`) |
-| 4 | `scripts/04_validate_labels.py` | Mide el acuerdo del extractor contra los 58 estudios gold |
-| 5 | `scripts/05_build_subset.py` | Elige 600 estudios no gold estratificados por etiqueta; validación interna agrupada por escáner; gold = test |
-| 6 | `scripts/06_preprocess.py` | DICOM -> caché `.npy` uint8 (16 cortes ordenados, campo de visión 180 mm, 256×256, sagital y coronal) |
-| 7 | `scripts/07_train.py` | Entrena un modelo 2.5D (CNN propia o backbone timm + atención por etiqueta) y lo evalúa en val y en los 58 gold |
+| 2 | `scripts/02_translate_reports.py` | Glosario clínico por idioma (`src/knee/glossary.py`) y traducción al inglés con NLLB-200 (GPU, local) |
+| 3 | `scripts/03_extract_labels.py` | 12 etiquetas débiles por reglas con negación e incertidumbre (`src/knee/extractor.py`) |
+| 4 | `scripts/04_validate_labels.py` | Acuerdo del extractor contra los 58 estudios gold (global, por etiqueta y por idioma) |
+| 5 | `scripts/05_build_subset.py` | 600 estudios no gold estratificados por etiqueta; validación agrupada por escáner; gold = test |
+| 6 | `scripts/06_preprocess.py` | DICOM → caché `.npy` uint8 (16 cortes ordenados, campo de visión 180 mm, 256×256, sagital y coronal) |
+| 7 | `scripts/07_train.py` | Modelo 2.5D (CNN propia o ResNet-50 de timm + atención por hallazgo); evalúa en val y en los gold |
 | 8 | `scripts/08_summarize.py` | Tabla comparativa y comparaciones pareadas por bootstrap (`scripts/run_experiments.sh` lanza A–F) |
-| 9 | `scripts/09_gradcam.py` | Grad-CAM propio + atención por hallazgo; dónde mira cada hallazgo a lo largo del volumen |
+| 9 | `scripts/09_gradcam.py` | Grad-CAM propio y atención por hallazgo (dónde mira cada hallazgo) |
+| 10 | `scripts/10_figures.py` | Figuras (PDF/PNG) y tablas LaTeX del informe a partir de los resultados |
 
 ### Experimentos
 
 | Id | Modelo | Pérdida | Etiquetas | Propósito |
 |---|---|---|---|---|
 | A | CNN desde cero | BCE | blandas | E2: modelo desde cero |
-| B | ResNet-50 (ImageNet) | BCE | blandas | E2: transfer learning (principal) |
-| C | ResNet-50 | focal | blandas | E4: ablación de pérdida |
-| D | ResNet-50 | BCE | duras (incierto = 0) | E4: ablación de manejo de ruido |
+| B | ResNet-50 (ImageNet) | BCE | blandas | E2: transfer learning (base) |
+| C | ResNet-50 | focal | blandas | E4/E6: ablación de pérdida |
+| D | ResNet-50 | BCE | duras (incierto = 0) | E4: manejo de etiquetas ruidosas |
 | E | ResNet-50 sin `pos_weight` | BCE | blandas | E6: evaluación de la mitigación del desbalance |
 | F | ResNet-50, plano coronal | focal | blandas | E4: ablación de plano |
 
-Los reportes nunca salen de Kaggle ni se envían a APIs externas: la traducción usa un
-modelo abierto que corre en el propio notebook. `outputs/` no se versiona.
+### Resultados principales (test = 58 estudios gold)
 
-Pruebas: `python tests/test_extractor.py` y `python tests/test_glossary.py`
+| Exp. | AUC macro [IC 95 %] | F1 macro |
+|---|---|---|
+| A · CNN propia | 0.586 [0.522–0.648] | 0.481 |
+| B · ResNet-50 (BCE) | 0.695 [0.637–0.745] | 0.532 |
+| **C · ResNet-50 focal** | **0.725 [0.671–0.772]** | **0.553** |
+| D · etiquetas duras | 0.695 [0.640–0.743] | 0.535 |
+| E · sin `pos_weight` | 0.707 [0.659–0.750] | 0.565 |
+| F · coronal (focal) | 0.719 [0.665–0.769] | 0.563 |
 
-### Versiones del extractor
+## Pruebas
 
-- **v1**: reglas en inglés + traducción NLLB sin glosario (etiqueta git `extractor-v1`).
-- **v2**: glosario clínico antes de traducir + reglas ampliadas. Los cambios se derivaron
-  solo de `tools/vocab_mining.py` sobre estudios no gold, sin usar etiquetas.
+```bash
+python tests/test_extractor.py
+python tests/test_glossary.py
+```
+
+## Versiones
+
+- `extractor-v1`: reglas en inglés + traducción NLLB sin glosario.
+- `extractor-v2`: glosario clínico antes de traducir + reglas ampliadas, derivadas solo de
+  `tools/vocab_mining.py` sobre estudios no gold, sin usar etiquetas. Evaluada una vez contra gold y congelada.
+- `entrenamiento-v1` (A–D) y `entrenamiento-v2` (E, F, comparaciones y Grad-CAM).
