@@ -15,6 +15,17 @@ traducción usa un modelo abierto (NLLB-200) que corre dentro del notebook.
 
 ## Ejecución (comando único)
 
+**Entorno recomendado: Kaggle Notebook.** Es donde se desarrolló y verificó el pipeline, y tiene tres
+ventajas prácticas:
+
+- **Los datos ya están montados** en `/kaggle/input/…` al añadir la competencia como Input: no hay que
+  descargar los miles de estudios DICOM ni tener espacio en disco para ellos.
+- **GPU T4 gratuita**, necesaria para la traducción (NLLB-200) y el entrenamiento.
+- **Los datos no salen de Kaggle**, tal como piden las reglas de la competencia.
+
+También puede ejecutarse fuera de Kaggle (ver [Ejecución fuera de Kaggle](#ejecución-fuera-de-kaggle)),
+pero exige descargar la competencia completa.
+
 En un **Kaggle Notebook** nuevo:
 
 1. **+ Add Input** → competencia *RSNA Knee Abnormality Detection*.
@@ -55,6 +66,28 @@ sus salidas (cada script busca lo que le falta bajo `/kaggle/input`, ver `src/kn
 | P1_Entrenamiento | experimentos A–D (`07`) | GPU T4 | P1_Preprocesado |
 | P1_Experimentos2 | experimentos E–F, `08`, `09` | GPU T4 | P1_Preprocesado + P1_Entrenamiento |
 | P1_Figuras | `10` | CPU | P1_Preprocesado + P1_Entrenamiento + P1_Experimentos2 (+ P1_Lanzador) |
+
+## Ejecución fuera de Kaggle
+
+El código no depende de Kaggle: `run_all.sh` recibe la carpeta de datos como argumento. Requisitos:
+GPU con CUDA, Bash (Linux, macOS, Colab; en Windows usar WSL), Internet para descargar NLLB-200 y los
+pesos de ResNet-50, y **espacio en disco para la competencia completa** (ver el tamaño en la pestaña
+*Data* de la competencia; en Colab gratuito puede no alcanzar). Este entorno no fue verificado por
+nosotros; el verificado es Kaggle.
+
+```bash
+# 1) Aceptar las reglas de la competencia en kaggle.com con la propia cuenta.
+# 2) Configurar la API de Kaggle (KAGGLE_USERNAME y KAGGLE_KEY, o ~/.kaggle/kaggle.json).
+pip install kaggle
+kaggle competitions download -c rsna-knee-abnormality-detection -p data
+cd data && unzip -q *.zip && rm *.zip && cd ..
+# La carpeta debe contener train.csv, train_series.csv y train_series/
+git clone https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
+cd Pregunta1_Parcial_RNAP && bash run_all.sh --quick ../data   # prueba rápida
+#                         bash run_all.sh ../data           # corrida completa
+```
+
+Los datos descargados no deben compartirse ni subirse a ningún repositorio (reglas de la competencia).
 
 ## Estructura
 
@@ -100,9 +133,9 @@ outputs/            resultados generados (no se versionan)
 |---|---|---|
 | A · CNN propia | 0.586 [0.522–0.648] | 0.481 |
 | B · ResNet-50 (BCE) | 0.695 [0.637–0.745] | 0.532 |
-| **C · ResNet-50 focal** | **0.725 [0.671–0.772]** | **0.553** |
+| **C · ResNet-50 focal** | **0.724 [0.671–0.772]** | **0.553** |
 | D · etiquetas duras | 0.695 [0.640–0.743] | 0.535 |
-| E · sin `pos_weight` | 0.707 [0.659–0.750] | 0.565 |
+| E · sin `pos_weight` | 0.706 [0.659–0.750] | 0.565 |
 | F · coronal (focal) | 0.719 [0.665–0.769] | 0.563 |
 
 ## Pruebas
