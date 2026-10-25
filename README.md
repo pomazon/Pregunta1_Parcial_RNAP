@@ -1,6 +1,5 @@
-# Exmane Parcial - Pregunta 1 — Detección de doce hallazgos en resonancias de rodilla
-con etiquetas obtenidas de reportes médicos en nueve
-idiomas
+# Exmane Parcial - Pregunta 1 — Detección de doce hallazgos en resonancias de rodilla con etiquetas obtenidas de reportes médicos en nueve idiomas
+
 Modelo 2.5D a nivel de estudio que predice 12 hallazgos en resonancias de rodilla, entrenado con
 etiquetas débiles extraídas de reportes radiológicos multilingües y evaluado en los 58 estudios con
 etiqueta dorada (gold).
