@@ -26,32 +26,21 @@ ventajas prácticas:
 También puede ejecutarse fuera de Kaggle (ver [Ejecución fuera de Kaggle](#ejecución-fuera-de-kaggle)),
 pero exige descargar la competencia completa.
 
-### Opción 1: notebook listo para Kaggle (lo más simple)
+### Opción 1: notebook listo para Kaggle
 
-El repositorio trae [`notebooks/P1_ejecucion_kaggle.ipynb`](notebooks/P1_ejecucion_kaggle.ipynb), que
-comprueba el entorno, descarga esta versión del código y ejecuta `run_all.sh`. No hay que escribir nada.
+[`notebooks/P1_ejecucion_kaggle.ipynb`](notebooks/P1_ejecucion_kaggle.ipynb) tiene dos celdas de código: la
+primera clona esta versión y ejecuta `bash run_all.sh`, que reproduce el informe; la segunda muestra los
+resultados (tablas de las etiquetas y de los seis modelos, figuras y mapas de Grad-CAM).
 
-1. **Descargar el notebook.** En GitHub, abrir `notebooks/P1_ejecucion_kaggle.ipynb` y usar el botón
-   *Download raw file*.
-2. **Aceptar las reglas** de la competencia *RSNA Knee Abnormality Detection* en kaggle.com con la propia
-   cuenta (pestaña *Rules*).
-3. **Subirlo a Kaggle.** En kaggle.com: *Create* → *New Notebook* → *File* → *Import Notebook* → elegir el
-   archivo `.ipynb`.
-4. **Configurar el notebook** (panel derecho):
-   - *Input* → **+ Add Input** → buscar *RSNA Knee Abnormality Detection* → *Add*.
+1. Descargar el notebook desde GitHub (*Download raw file*).
+2. En Kaggle: *Create* → *New Notebook* → *File* → *Import Notebook* → elegir el `.ipynb`.
+3. Configurar (panel derecho):
+   - *Input* → **+ Add Input** → *RSNA Knee Abnormality Detection* (antes hay que aceptar sus reglas).
    - *Settings* → **Accelerator: GPU T4 x1**.
-   - *Settings* → **Internet: On**. Kaggle exige tener el teléfono verificado en la cuenta para activarlo.
-     Internet se usa para clonar el repositorio, instalar `requirements.txt` y descargar los pesos abiertos
-     de NLLB-200 y ResNet-50; los reportes no salen de Kaggle.
-5. **Elegir el modo** en la celda 2: `MODO = "rapido"` (unos 25 min, comprueba que todo corre) o
-   `MODO = "completo"` (varias horas, reproduce el informe).
-6. **Ejecutar.** *Run All* para el modo rápido. Para el completo, mejor *Save Version* → *Save & Run All
-   (Commit)*: corre en segundo plano aunque se cierre el navegador, con un límite de 12 h por sesión.
-
-La celda 1 avisa con un mensaje claro si falta la GPU, los datos o Internet. Los resultados quedan en
-`/kaggle/working/Pregunta1_Parcial_RNAP/outputs/` y la celda 5 muestra la tabla de AUC y F1 por modelo.
-No subir a GitHub el notebook con sus salidas ni la carpeta `outputs/`: contienen datos derivados de la
-competencia.
+   - *Settings* → **Internet: On** (Kaggle pide el teléfono verificado).
+4. Ejecutar con **Save Version → Save & Run All (Commit)**. La corrida toma varias horas; así sigue en
+   segundo plano aunque se cierre el navegador (límite de 12 h). Al terminar, abrir esa versión: la última
+   celda muestra los resultados y los archivos quedan en la pestaña *Output*.
 
 ### Opción 2: comandos a mano
 
@@ -139,7 +128,7 @@ Los datos descargados no deben compartirse ni subirse a ningún repositorio (reg
 
 ```
 run_all.sh          comando único (--quick para la prueba rápida)
-notebooks/          P1_ejecucion_kaggle.ipynb: notebook para importar en Kaggle y ejecutar todo
+notebooks/          P1_ejecucion_kaggle.ipynb: notebook para importar en Kaggle (ejecuta run_all.sh)
 requirements.txt    dependencias
 scripts/            un script por paso del pipeline (01 … 10) y run_experiments.sh
 src/knee/           código propio: etiquetas, glosario, extractor, dataset, modelos, pérdidas, métricas
