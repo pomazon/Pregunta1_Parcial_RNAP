@@ -1,4 +1,6 @@
-# Exmane Parcial - Pregunta 1 — Clasificación de hallazgos en resonancia magnética de rodilla
+# Pregunta 1 — Clasificación Multietiqueta de Anomalías de Rodilla en Resonancia Magnética (CNN + Aprendizaje Débilmente Supervisado)
+
+Examen parcial · Redes Neuronales y Aprendizaje Profundo · UNI FIIS 2026-II
 
 Modelo 2.5D a nivel de estudio que predice 12 hallazgos en resonancias de rodilla, entrenado con
 etiquetas débiles extraídas de reportes radiológicos multilingües y evaluado en los 58 estudios con
@@ -23,6 +25,35 @@ ventajas prácticas:
 
 También puede ejecutarse fuera de Kaggle (ver [Ejecución fuera de Kaggle](#ejecución-fuera-de-kaggle)),
 pero exige descargar la competencia completa.
+
+### Opción 1: notebook listo para Kaggle (lo más simple)
+
+El repositorio trae [`notebooks/P1_ejecucion_kaggle.ipynb`](notebooks/P1_ejecucion_kaggle.ipynb), que
+comprueba el entorno, descarga esta versión del código y ejecuta `run_all.sh`. No hay que escribir nada.
+
+1. **Descargar el notebook.** En GitHub, abrir `notebooks/P1_ejecucion_kaggle.ipynb` y usar el botón
+   *Download raw file*.
+2. **Aceptar las reglas** de la competencia *RSNA Knee Abnormality Detection* en kaggle.com con la propia
+   cuenta (pestaña *Rules*).
+3. **Subirlo a Kaggle.** En kaggle.com: *Create* → *New Notebook* → *File* → *Import Notebook* → elegir el
+   archivo `.ipynb`.
+4. **Configurar el notebook** (panel derecho):
+   - *Input* → **+ Add Input** → buscar *RSNA Knee Abnormality Detection* → *Add*.
+   - *Settings* → **Accelerator: GPU T4 x1**.
+   - *Settings* → **Internet: On**. Kaggle exige tener el teléfono verificado en la cuenta para activarlo.
+     Internet se usa para clonar el repositorio, instalar `requirements.txt` y descargar los pesos abiertos
+     de NLLB-200 y ResNet-50; los reportes no salen de Kaggle.
+5. **Elegir el modo** en la celda 2: `MODO = "rapido"` (unos 25 min, comprueba que todo corre) o
+   `MODO = "completo"` (varias horas, reproduce el informe).
+6. **Ejecutar.** *Run All* para el modo rápido. Para el completo, mejor *Save Version* → *Save & Run All
+   (Commit)*: corre en segundo plano aunque se cierre el navegador, con un límite de 12 h por sesión.
+
+La celda 1 avisa con un mensaje claro si falta la GPU, los datos o Internet. Los resultados quedan en
+`/kaggle/working/Pregunta1_Parcial_RNAP/outputs/` y la celda 5 muestra la tabla de AUC y F1 por modelo.
+No subir a GitHub el notebook con sus salidas ni la carpeta `outputs/`: contienen datos derivados de la
+competencia.
+
+### Opción 2: comandos a mano
 
 En un **Kaggle Notebook** nuevo:
 
@@ -77,7 +108,7 @@ notebook, clonar el repositorio y ejecutar antes `pip install -q -r requirements
 |---|---|---|
 | 1 | `01` a `06` (exploración, traducción, etiquetas, validación, subconjunto, caché) | Competencia |
 | 2 | `bash scripts/run_experiments.sh` (entrenamientos A–F y resumen) | Salida del tramo 1 |
-| 3 | `python scripts/09_gradcam.py --run C_resnet50_focal_soft` y `python scripts/10_figures.py` | Salidas de los tramos 1 y 2 |
+| 3 | Las tres llamadas a `scripts/09_gradcam.py` del paso 9 de `run_all.sh` y `python scripts/10_figures.py` | Salidas de los tramos 1 y 2 |
 
 Así generamos nosotros los resultados del informe, repartidos en varios notebooks de Kaggle.
 </details>
@@ -108,6 +139,7 @@ Los datos descargados no deben compartirse ni subirse a ningún repositorio (reg
 
 ```
 run_all.sh          comando único (--quick para la prueba rápida)
+notebooks/          P1_ejecucion_kaggle.ipynb: notebook para importar en Kaggle y ejecutar todo
 requirements.txt    dependencias
 scripts/            un script por paso del pipeline (01 … 10) y run_experiments.sh
 src/knee/           código propio: etiquetas, glosario, extractor, dataset, modelos, pérdidas, métricas
@@ -128,7 +160,7 @@ outputs/            resultados generados (no se versionan)
 | 6 | `scripts/06_preprocess.py` | DICOM → caché `.npy` uint8 (16 cortes ordenados, campo de visión 180 mm, 256×256, sagital y coronal) |
 | 7 | `scripts/07_train.py` | Modelo 2.5D (CNN propia o ResNet-50 de timm + atención por hallazgo); evalúa en val y en los gold |
 | 8 | `scripts/08_summarize.py` | Tabla comparativa y comparaciones pareadas por bootstrap (`scripts/run_experiments.sh` lanza A–F) |
-| 9 | `scripts/09_gradcam.py` | Grad-CAM propio y atención por hallazgo (dónde mira cada hallazgo) |
+| 9 | `scripts/09_gradcam.py` | Grad-CAM propio y atención por hallazgo. Se ejecuta tres veces: 6 hallazgos en la última capa (`outputs/gradcam`), los 12 hallazgos (`outputs/gradcam_all`) y los 12 en `layer3` (`outputs/gradcam_layer3`) |
 | 10 | `scripts/10_figures.py` | Figuras (PDF/PNG) y tablas LaTeX del informe a partir de los resultados |
 
 ### Experimentos
@@ -148,10 +180,13 @@ outputs/            resultados generados (no se versionan)
 |---|---|---|
 | A · CNN propia | 0.586 [0.522–0.648] | 0.481 |
 | B · ResNet-50 (BCE) | 0.695 [0.637–0.745] | 0.532 |
-| **C · ResNet-50 focal** | **0.724 [0.671–0.772]** | **0.553** |
+| **C · ResNet-50 focal** | **0.724 [0.671–0.772]** | 0.553 |
 | D · etiquetas duras | 0.695 [0.640–0.743] | 0.535 |
-| E · sin `pos_weight` | 0.706 [0.659–0.750] | 0.565 |
+| E · sin `pos_weight` | 0.706 [0.659–0.750] | **0.565** |
 | F · coronal (focal) | 0.719 [0.665–0.769] | 0.563 |
+
+F se evalúa en 56 de los 58 estudios, los que tienen serie coronal. El F1 usa el umbral de cada
+hallazgo elegido en validación.
 
 ## Pruebas
 

@@ -57,7 +57,12 @@ echo "== Pasos 7-8: entrenamiento, ablaciones y resumen (GPU) =="
 bash scripts/run_experiments.sh $TRAIN_ARGS
 
 echo "== Paso 9: Grad-CAM y atención (mejor modelo) =="
+# 9a. Seis hallazgos, última capa (8x8): revisión visual y tabla de atención de los 12 hallazgos
 python scripts/09_gradcam.py --run C_resnet50_focal_soft
+# 9b. Los 12 hallazgos, dos casos cada uno (Anexo A del informe)
+python scripts/09_gradcam.py --run C_resnet50_focal_soft --labels all --out_dir outputs/gradcam_all
+# 9c. Los 12 hallazgos en la capa layer3 (16x16), con más detalle (Figura 6 del informe)
+python scripts/09_gradcam.py --run C_resnet50_focal_soft --labels all --layer layer3 --out_dir outputs/gradcam_layer3
 
 echo "== Paso 10: figuras y tablas del informe =="
 python scripts/10_figures.py
