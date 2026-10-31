@@ -29,7 +29,7 @@ pero exige descargar la competencia completa.
 ### Opción 1: notebook listo para Kaggle
 
 [`notebooks/P1_ejecucion_kaggle.ipynb`](notebooks/P1_ejecucion_kaggle.ipynb) tiene dos celdas de código: la
-primera clona esta versión y ejecuta `bash run_all.sh`, que reproduce el informe; la segunda muestra los
+primera clona la versión más reciente del repositorio y ejecuta `bash run_all.sh`, que reproduce el informe; la segunda muestra los
 resultados (tablas de las etiquetas y de los seis modelos, figuras y mapas de Grad-CAM).
 
 1. Descargar el notebook desde GitHub (*Download raw file*).
@@ -51,12 +51,11 @@ En un **Kaggle Notebook** nuevo:
 3. Ejecutar:
 
 ```bash
-!git clone --branch entrega-final https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
+!git clone https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
 !cd Pregunta1_Parcial_RNAP && bash run_all.sh
 ```
 
-`--branch entrega-final` descarga exactamente la versión entregada (release `entrega-final`); Git avisa
-"detached HEAD", lo cual es normal al clonar un release. `run_all.sh` instala `requirements.txt` y
+Esto descarga la versión más reciente del repositorio (rama `main`). `run_all.sh` instala `requirements.txt` y
 ejecuta los pasos 1 a 10 en orden. Los resultados quedan en
 `Pregunta1_Parcial_RNAP/outputs/`. Si la competencia está montada en otra ruta, pasarla como argumento:
 `bash run_all.sh /ruta/a/los/datos`.
@@ -117,7 +116,7 @@ pip install kaggle
 kaggle competitions download -c rsna-knee-abnormality-detection -p data
 cd data && unzip -q *.zip && rm *.zip && cd ..
 # La carpeta debe contener train.csv, train_series.csv y train_series/
-git clone --branch entrega-final https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
+git clone https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
 cd Pregunta1_Parcial_RNAP && bash run_all.sh --quick ../data   # prueba rápida
 #                         bash run_all.sh ../data           # corrida completa
 ```
