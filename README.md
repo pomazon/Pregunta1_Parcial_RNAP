@@ -13,7 +13,7 @@ competencia): se usan montados en un Kaggle Notebook. Ningún reporte, imagen ni
 versiona (`outputs/` está en `.gitignore`) y los reportes no se envían a ninguna API externa: la
 traducción usa un modelo abierto (NLLB-200) que corre dentro del notebook.
 
-## Ejecución (comando único)
+## Ejecución (comando único) 
 
 **Entorno recomendado: Kaggle Notebook.** Es donde se desarrolló y verificó el pipeline, y tiene tres
 ventajas prácticas:
