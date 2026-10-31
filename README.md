@@ -131,7 +131,7 @@ notebooks/          P1_ejecucion_kaggle.ipynb: notebook para importar en Kaggle 
 requirements.txt    dependencias
 scripts/            un script por paso del pipeline (01 … 10) y run_experiments.sh
 src/knee/           código propio: etiquetas, glosario, extractor, dataset, modelos, pérdidas, métricas
-tools/              vocab_mining.py (diagnóstico sin etiquetas) y plot_architecture.py (diagrama)
+tools/              vocab_mining.py (diagnóstico sin etiquetas)
 tests/              pruebas del extractor y del glosario con frases sintéticas
 outputs/            resultados generados (no se versionan)
 ```
