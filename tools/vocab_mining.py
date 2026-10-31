@@ -111,7 +111,7 @@ def main():
     text = "\n".join(lines)
     print(text)
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    with open(args.out, "w") as f:
+    with open(args.out, "w", encoding="utf-8") as f:
         f.write(text)
 
     # Tasa de 'nm' por idioma y etiqueta (sin etiquetas gold)

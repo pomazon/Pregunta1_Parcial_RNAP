@@ -1,6 +1,10 @@
 """Pruebas del extractor con frases sintéticas (no son datos de la competencia)."""
-import os, sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+import os
+import sys
+
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
+
 from knee.extractor import extract_report
 
 CASES = [
