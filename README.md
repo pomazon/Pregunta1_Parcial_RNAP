@@ -3,25 +3,24 @@
 Examen parcial · Redes Neuronales y Aprendizaje Profundo · UNI FIIS 2026-II
 
 Modelo 2.5D a nivel de estudio que predice 12 hallazgos en resonancias de rodilla, entrenado con
-etiquetas débiles extraídas de reportes radiológicos multilingües y evaluado en los 58 estudios con 
+etiquetas débiles extraídas de reportes radiológicos multilingües y evaluado en los 58 estudios con
 etiqueta dorada (gold).
 
 ## Novedades de mantenimiento (31-oct-2026)
 
-- Se reforzó la reproducibilidad de dependencias con rangos explícitos en
-  `requirements.txt`.
+- Se revisaron y ordenaron dependencias del entorno en `requirements.txt`.
 - Se estandarizó la lectura/escritura de archivos de texto/JSON en UTF-8 en los scripts.
 - Se unificó el patrón de importación del código local (`src/`) para mejorar legibilidad.
 - Se verificó que las pruebas sintéticas del extractor y glosario se mantienen correctas.
 
-## Datos
+## Datos 
 
 RSNA Knee Abnormality Detection (Kaggle). Los datos **no** están en este repositorio (reglas de la
 competencia): se usan montados en un Kaggle Notebook. Ningún reporte, imagen ni etiqueta derivada se
 versiona (`outputs/` está en `.gitignore`) y los reportes no se envían a ninguna API externa: la
 traducción usa un modelo abierto (NLLB-200) que corre dentro del notebook.
 
-## Ejecución (comando único) 
+## Ejecución (comando único)
 
 **Entorno recomendado: Kaggle Notebook.** Es donde se desarrolló y verificó el pipeline, y tiene tres
 ventajas prácticas:
@@ -133,7 +132,8 @@ cd data && unzip -q *.zip && rm *.zip && cd ..
 # La carpeta debe contener train.csv, train_series.csv y train_series/
 git clone https://github.com/pomazon/Pregunta1_Parcial_RNAP.git
 cd Pregunta1_Parcial_RNAP && bash run_all.sh --quick ../data   # prueba rápida
-#                         bash run_all.sh ../data           # corrida completa
+# Alternativa (corrida completa):
+# cd Pregunta1_Parcial_RNAP && bash run_all.sh ../data
 ```
 
 Los datos descargados no deben compartirse ni subirse a ningún repositorio (reglas de la competencia).
