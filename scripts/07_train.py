@@ -26,7 +26,8 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.common import find_file  # noqa: E402
 from knee.data import KneeStudyDataset, worker_init_fn  # noqa: E402
 from knee.labels import LABELS  # noqa: E402
@@ -133,7 +134,7 @@ def main():
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=lr, total_steps=steps, pct_start=0.1)
     scaler = torch.amp.GradScaler(enabled=device.type == "cuda")
 
-    with open(os.path.join(out, "config.json"), "w") as f:
+    with open(os.path.join(out, "config.json"), "w", encoding="utf-8") as f:
         json.dump({**vars(args), "bs": bs, "lr": lr, "pretrained": pretrained, "run": run,
                    "n_params": n_params, "n": {k: len(v) for k, v in parts.items()}}, f, indent=2)
 
@@ -205,7 +206,7 @@ def main():
                "test_macro_recall": float(prf_t[:, 1].mean()), "per_label": table.reset_index()
                .rename(columns={"index": "label"}).to_dict(orient="records"),
                "config": {k: getattr(args, k) for k in ("model", "pool", "loss", "labels", "pos_weight", "plane")}}
-    with open(os.path.join(out, "metrics.json"), "w") as f:
+    with open(os.path.join(out, "metrics.json"), "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=2, default=float)
     for name, part, pr in (("val", parts["val"], p_val), ("test", parts["test"], p_test)):
         pd.concat([part[["StudyInstanceUID"]], pd.DataFrame(pr, columns=LABELS)], axis=1) \

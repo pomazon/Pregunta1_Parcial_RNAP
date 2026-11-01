@@ -15,7 +15,8 @@ from collections import Counter
 import pandas as pd
 import pydicom
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.labels import LABELS  # noqa: E402
 
 
@@ -140,7 +141,7 @@ def main():
         "fluid_sensitive_coverage": coverage,
         "syntaxes": dict(syntaxes), "decode": decode,
     }
-    with open(os.path.join(args.out_dir, "eda_summary.json"), "w") as f:
+    with open(os.path.join(args.out_dir, "eda_summary.json"), "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, default=int)
     train[["StudyInstanceUID", "lang", "rep_len"]].to_csv(
         os.path.join(args.out_dir, "study_meta.csv"), index=False)

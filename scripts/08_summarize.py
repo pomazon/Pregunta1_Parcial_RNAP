@@ -11,14 +11,14 @@ import argparse
 import glob
 import json
 import os
-
 import sys
 import warnings
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.common import find_file  # noqa: E402
 from knee.labels import LABELS  # noqa: E402
 from knee.metrics import auc_per_label  # noqa: E402
@@ -67,7 +67,8 @@ def main():
         found[os.path.basename(os.path.dirname(path))] = path
     os.makedirs(args.runs_dir, exist_ok=True)
     for name in sorted(found):
-        m = json.load(open(found[name]))
+        with open(found[name], encoding="utf-8") as f:
+            m = json.load(f)
         rows.append({"run": m["run"], **m["config"], "best_epoch": m["best_epoch"],
                      "val_macro_auc": round(m["val_macro_auc"], 4),
                      "test_macro_auc": round(m["test_macro_auc"], 4),

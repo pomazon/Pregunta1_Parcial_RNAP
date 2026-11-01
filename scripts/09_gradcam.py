@@ -30,7 +30,8 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.common import find_file  # noqa: E402
 from knee.data import KneeStudyDataset  # noqa: E402
 from knee.labels import LABELS  # noqa: E402
@@ -126,7 +127,8 @@ def main():
     args = parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     run_dir = find_run_dir(args.run, args.runs_dir)
-    cfg = json.load(open(os.path.join(run_dir, "config.json")))
+    with open(os.path.join(run_dir, "config.json"), encoding="utf-8") as f:
+        cfg = json.load(f)
     plane = cfg.get("plane", "Sagittal")
     model = build_model(cfg["model"], len(LABELS), cfg.get("pool", "attn"), pretrained=False).to(device)
     model.load_state_dict(torch.load(os.path.join(run_dir, "best.pt"), map_location=device))

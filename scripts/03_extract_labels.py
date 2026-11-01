@@ -17,7 +17,8 @@ import sys
 
 import pandas as pd
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.extractor import (STATUS_TO_CONF, STATUS_TO_HARD, STATUS_TO_SOFT,  # noqa: E402
                             extract_report)
 from knee.labels import LABELS  # noqa: E402

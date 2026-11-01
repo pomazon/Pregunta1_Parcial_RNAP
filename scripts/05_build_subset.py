@@ -22,7 +22,8 @@ import numpy as np
 import pandas as pd
 import pydicom
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.common import DEFAULT_DATA_DIR, find_file, resolve_data_dir  # noqa: E402
 from knee.labels import LABELS  # noqa: E402
 

@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import cohen_kappa_score, f1_score, precision_score, recall_score
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.common import DEFAULT_DATA_DIR, resolve_data_dir  # noqa: E402
 from knee.labels import LABELS  # noqa: E402
 
@@ -123,7 +124,7 @@ def main():
     by_lang.to_csv(os.path.join(args.out_dir, "validation_per_language.csv"))
     recall_tbl.to_csv(os.path.join(args.out_dir, "validation_recall_label_x_group.csv"))
     dis.to_csv(os.path.join(args.out_dir, "gold_disagreements.csv"), index=False)
-    with open(os.path.join(args.out_dir, "validation_summary.json"), "w") as f:
+    with open(os.path.join(args.out_dir, "validation_summary.json"), "w", encoding="utf-8") as f:
         json.dump({"macro": macro.round(4).to_dict(), "noise_rate": round(1 - macro["acuerdo"], 4),
                    "by_group": by_group.to_dict(orient="index")}, f, indent=2, default=float)
     print(f"\nArchivos guardados en {args.out_dir}/ "

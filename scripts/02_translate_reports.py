@@ -21,7 +21,8 @@ import time
 
 import pandas as pd
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.common import DEFAULT_DATA_DIR, detect_language, resolve_data_dir  # noqa: E402
 from knee.glossary import apply_glossary  # noqa: E402
 from knee.labels import LABELS  # noqa: E402
@@ -126,7 +127,7 @@ def main():
     cache_path = os.path.join(args.out_dir, "translation_cache.json")
     cache = {}
     if os.path.exists(cache_path):
-        with open(cache_path) as f:
+        with open(cache_path, encoding="utf-8") as f:
             cache = json.load(f)
         print(f"Caché previo: {len(cache)} segmentos ya traducidos")
 
@@ -152,12 +153,12 @@ def main():
             done += len(batch)
             n_batches += 1
             if n_batches % 50 == 0:
-                with open(cache_path, "w") as f:
+                with open(cache_path, "w", encoding="utf-8") as f:
                     json.dump(cache, f)
                 el = time.time() - t0
                 eta = el / max(done, 1) * (n_total - done)
                 print(f"  {done}/{n_total} segmentos | {el/60:.1f} min | ETA {eta/60:.1f} min", flush=True)
-    with open(cache_path, "w") as f:
+    with open(cache_path, "w", encoding="utf-8") as f:
         json.dump(cache, f)
 
     def rebuild(row):

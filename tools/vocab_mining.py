@@ -20,7 +20,8 @@ from collections import Counter, defaultdict
 
 import pandas as pd
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.common import DEFAULT_DATA_DIR, resolve_data_dir  # noqa: E402
 from knee.extractor import extract_sentence, split_sentences  # noqa: E402
 from knee.labels import LABELS  # noqa: E402

@@ -36,7 +36,8 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from sklearn.metrics import roc_curve  # noqa: E402
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+sys.path.insert(0, SRC_DIR)
 from knee.common import find_file  # noqa: E402
 from knee.labels import LABELS, LABELS_ES  # noqa: E402
 
@@ -328,7 +329,10 @@ def main():
         sys.exit("No se encontraron experimentos (metrics.json). Añadan como Input P1_Entrenamiento "
                  "y P1_Experimentos2, o ejecuten antes el paso 7.")
     print("Experimentos encontrados:", ", ".join(run_dirs))
-    metrics = {r: json.load(open(os.path.join(d, "metrics.json"))) for r, d in run_dirs.items()}
+    metrics = {}
+    for run, run_dir in run_dirs.items():
+        with open(os.path.join(run_dir, "metrics.json"), encoding="utf-8") as f:
+            metrics[run] = json.load(f)
 
     sub_path = optional_file("subset.csv", "outputs/subset/subset.csv", args.search_root)
     subset = pd.read_csv(sub_path) if sub_path else None
@@ -357,7 +361,7 @@ def main():
             fig_language(val_lang, args.out_dir)
 
     tex = tables_tex(metrics, best, paired, prev)
-    with open(os.path.join(args.out_dir, "tablas.tex"), "w") as f:
+    with open(os.path.join(args.out_dir, "tablas.tex"), "w", encoding="utf-8") as f:
         f.write(tex)
     print("  tablas.tex")
     if prev is not None:
