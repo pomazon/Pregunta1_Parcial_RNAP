@@ -6,6 +6,14 @@ Modelo 2.5D a nivel de estudio que predice 12 hallazgos en resonancias de rodill
 etiquetas débiles extraídas de reportes radiológicos multilingües y evaluado en los 58 estudios con 
 etiqueta dorada (gold).
 
+## Novedades de mantenimiento (31-oct-2026)
+
+- Se reforzó la reproducibilidad de dependencias con rangos explícitos en
+  `requirements.txt`.
+- Se estandarizó la lectura/escritura de archivos de texto/JSON en UTF-8 en los scripts.
+- Se unificó el patrón de importación del código local (`src/`) para mejorar legibilidad.
+- Se verificó que las pruebas sintéticas del extractor y glosario se mantienen correctas.
+
 ## Datos
 
 RSNA Knee Abnormality Detection (Kaggle). Los datos **no** están en este repositorio (reglas de la
@@ -25,6 +33,13 @@ ventajas prácticas:
 
 También puede ejecutarse fuera de Kaggle (ver [Ejecución fuera de Kaggle](#ejecución-fuera-de-kaggle)),
 pero exige descargar la competencia completa.
+
+### Entorno validado (referencia)
+
+- Plataforma: Kaggle Notebook
+- Acelerador: GPU T4 x1
+- Internet: activado (para descargar NLLB y pesos preentrenados)
+- Fecha de verificación rápida end-to-end: 24-oct-2026 (modo `--quick`)
 
 ### Opción 1: notebook listo para Kaggle
 
@@ -122,6 +137,21 @@ cd Pregunta1_Parcial_RNAP && bash run_all.sh --quick ../data   # prueba rápida
 ```
 
 Los datos descargados no deben compartirse ni subirse a ningún repositorio (reglas de la competencia).
+
+## Troubleshooting rápido
+
+- **`No hay GPU` al ejecutar el paso 2 o 7**  
+  En Kaggle, activar **Settings → Accelerator: GPU T4 x1**.
+
+- **La corrida supera 12 h en Kaggle**  
+  Partir la ejecución en tramos como se describe en el bloque "Si una sola sesión no alcanza".
+
+- **No se encuentra `train_series.csv`**  
+  Verificar que la competencia fue añadida en **Input** y/o pasar explícitamente la ruta:
+  `bash run_all.sh /ruta/a/los/datos`.
+
+- **Falla de memoria o tiempo en prueba local**  
+  Ejecutar primero `bash run_all.sh --quick` para validar pipeline antes de la corrida completa.
 
 ## Estructura
 
